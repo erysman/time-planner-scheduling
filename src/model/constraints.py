@@ -1,6 +1,6 @@
 import pulp
 import pprint
-from model.parameters import DecisionVariables, ModelParameters
+from .parameters import DecisionVariables, ModelParameters
 
 
 def addConstraints(
@@ -11,8 +11,8 @@ def addConstraints(
     startTimesShouldNotExceedOneDay(lp, decisionVariables, modelPrameters)
     tasksShouldNotOverlapInTime(lp, decisionVariables, modelPrameters)
     tasksShouldNotExceedProjectTimeRange(lp, decisionVariables, modelPrameters)
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(lp.constraints)
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(lp.constraints)
 
 
 def startTimesShouldNotExceedOneDay(

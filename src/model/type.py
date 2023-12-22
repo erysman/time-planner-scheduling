@@ -24,6 +24,7 @@ class Task:
             f"priority={self.priority}, startTime={self.startTime}, duration={self.duration})"
         )
 
+
 class Project:
     def __init__(self, id: str, name: str, timeRangeStart: float, timeRangeEnd: float):
         self.id = id

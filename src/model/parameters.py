@@ -1,6 +1,6 @@
 import pulp
-from model.type import Project, Task
-from model.utils import generatePairs, generate2dArray
+from .type import Project, Task
+from .utils import generatePairs, generate2dArray
 
 
 from typing import Literal, List
@@ -47,8 +47,6 @@ def getModelParameters(tasks: List[Task], projects: List[Project]) -> ModelParam
         )
         for task in tasks
     ]
-    print(projectTimeMin, projectTimeMax)
-
     tasksPairs = generatePairs(tasksIndicies)
     isIPriorityGreaterThanJ = generate2dArray(tasksIndicies)
     for i, j in tasksPairs:

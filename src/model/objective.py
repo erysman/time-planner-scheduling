@@ -1,5 +1,5 @@
 import pulp
-from model.parameters import DecisionVariables, ModelParameters
+from .parameters import DecisionVariables, ModelParameters
 
 
 def setObjectiveFunction(
