@@ -9,6 +9,7 @@ from typing import Literal, List
 class ModelParameters:
     def __init__(
         self,
+        tasksIds: List[str],
         tasksIndicies: List[int],
         priority: List[Literal[1, 2, 3, 4]],
         duration: List[int],
@@ -17,6 +18,7 @@ class ModelParameters:
         tasksPairs: List[tuple[int, int]],
         isIPriorityGreaterThanJ: List[List[int]],
     ):
+        self.tasksIds = tasksIds
         self.tasksIndicies = tasksIndicies
         self.priority = priority
         self.duration = duration
@@ -53,6 +55,7 @@ def getModelParameters(tasks: List[Task], projects: List[Project]) -> ModelParam
         if priority[i] > priority[j]:
             isIPriorityGreaterThanJ[i][j] = 1
     return ModelParameters(
+        tasksIds,
         tasksIndicies,
         priority,
         duration,
@@ -72,12 +75,12 @@ class DecisionVariables:
 
 def getDecisionVariables(tasksIndicies: List[int]) -> DecisionVariables:
     startTime = pulp.LpVariable.dicts(
-        "startTimeVar", tasksIndicies, lowBound=0, upBound=24, cat="Continuous"
+        "startTime", tasksIndicies, lowBound=0, upBound=24, cat="Continuous"
     )
     isSheduled = pulp.LpVariable.dicts(
-        "scheduledVar", tasksIndicies, lowBound=0, cat="Binary"
+        "isScheduled", tasksIndicies, lowBound=0, cat="Binary"
     )
     isIafterJ = pulp.LpVariable.dicts(
-        "isIafterJVar", (tasksIndicies, tasksIndicies), lowBound=0, cat="Binary"
+        "isIafterJ", (tasksIndicies, tasksIndicies), lowBound=0, cat="Binary"
     )
     return DecisionVariables(startTime, isSheduled, isIafterJ)

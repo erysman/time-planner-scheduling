@@ -18,6 +18,11 @@ class Task:
         self.startTime = startTime
         self.duration = duration
 
+    def __str__(self):
+        return (
+            f"Task(id={self.id}, name={self.name}, projectId={self.projectId}, "
+            f"priority={self.priority}, startTime={self.startTime}, duration={self.duration})"
+        )
 
 class Project:
     def __init__(self, id: str, name: str, timeRangeStart: float, timeRangeEnd: float):
@@ -25,3 +30,9 @@ class Project:
         self.name = name
         self.timeRangeStart = timeRangeStart
         self.timeRangeEnd = timeRangeEnd
+
+    def __str__(self):
+        return (
+            f"Project(id={self.id}, name={self.name}, "
+            f"timeRangeStart={self.timeRangeStart}, timeRangeEnd={self.timeRangeEnd})"
+        )
