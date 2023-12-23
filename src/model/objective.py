@@ -1,5 +1,7 @@
+import logging
 import pulp
 from .parameters import DecisionVariables, ModelParameters
+import math
 
 
 def setObjectiveFunction(
@@ -7,8 +9,12 @@ def setObjectiveFunction(
     decisionVariables: DecisionVariables,
     modelPrameters: ModelParameters,
 ):
+    tasksCount = len(modelPrameters.tasksIds)
+    weight =  max((math.comb(tasksCount, 2),2)) #math.comb(tasksCount, 2)
+    logging.info(f"using objective weight: {weight}")
     lp += (
-        maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
+        weight
+        * maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
         - penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters),
         "objective",
     )
@@ -30,5 +36,9 @@ def maximizeNumberOfTasksWithHighPriority(
 ):
     tasksIndicies = modelPrameters.tasksIndicies
     priority = modelPrameters.priority
+    priorityWeight = modelPrameters.priorityWeight
     isSheduled = decisionVariables.isSheduled
-    return pulp.lpSum([priority[i] * isSheduled[i] for i in tasksIndicies])
+
+    return pulp.lpSum(
+        [priorityWeight[priority[i]] * isSheduled[i] for i in tasksIndicies]
+    )

@@ -1,3 +1,4 @@
+import logging
 import pulp
 from .constraints import addConstraints
 
@@ -8,9 +9,9 @@ from .parameters import (
     getModelParameters,
 )
 from .type import Project, Task
-
 from typing import List
 
+logging.basicConfig(level=logging.DEBUG)
 
 def scheduleTasks(tasks: List[Task], projects: List[Project]) -> List[Task]:
     # print(pulp.listSolvers(onlyAvailable=True))
@@ -19,8 +20,9 @@ def scheduleTasks(tasks: List[Task], projects: List[Project]) -> List[Task]:
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
     setObjectiveFunction(lp, decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)
-    solver = pulp.getSolver('GLPK_CMD', msg=0)
+    solver = pulp.getSolver("GLPK_CMD", msg=0)
     lp.solve(solver)
+    logSolution(lp)
     return buildTasksListFromSolvedModel(lp, modelPrameters, tasks)
 
 
@@ -42,7 +44,7 @@ def buildTasksListFromSolvedModel(
             startTime if isScheduled else None,
             task.duration,
         )
-        print(resultTask)
+        logging.debug(resultTask)
         resultTasks.append(resultTask)
     # TODO append tasks, that were skipped because already had a startTime
     return resultTasks
@@ -50,3 +52,10 @@ def buildTasksListFromSolvedModel(
 
 # cplex jesli bedzie za wolno (mozna pobrać z ibm za darmo dla studentow)
 # timeout w pulp
+
+
+def logSolution(lp: pulp.LpProblem):
+    for var in lp.variables():
+        logging.debug(f"{var} = {pulp.value(var)}")
+
+    logging.debug(f"OPT = {pulp.value(lp.objective)}")

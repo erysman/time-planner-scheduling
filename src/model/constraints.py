@@ -1,18 +1,38 @@
+import logging
 import pulp
 import pprint
 from .parameters import DecisionVariables, ModelParameters
 
+pp = pprint.PrettyPrinter(indent=4)
 
 def addConstraints(
     lp: pulp.LpProblem,
     decisionVariables: DecisionVariables,
     modelPrameters: ModelParameters,
 ):
+    someStartTimesAreAlreadySet(lp, decisionVariables, modelPrameters)
     startTimesShouldNotExceedOneDay(lp, decisionVariables, modelPrameters)
     tasksShouldNotOverlapInTime(lp, decisionVariables, modelPrameters)
     tasksShouldNotExceedProjectTimeRange(lp, decisionVariables, modelPrameters)
-    # pp = pprint.PrettyPrinter(indent=4)
-    # pp.pprint(lp.constraints)
+    logging.debug(pp.pformat(lp.constraints))
+
+
+def someStartTimesAreAlreadySet(
+    lp: pulp.LpProblem,
+    decisionVariables: DecisionVariables,
+    modelPrameters: ModelParameters,
+):
+    startTime = decisionVariables.startTime
+    isSheduled = decisionVariables.isSheduled
+    initialStartTime = modelPrameters.initialStartTime
+
+    for i in modelPrameters.tasksIndicies:
+        if initialStartTime[i] != None:
+            startTime[i].setInitialValue(initialStartTime[i])
+            startTime[i].fixValue()
+            isSheduled[i].setInitialValue(1)
+            isSheduled[i].fixValue()
+            logging.debug(f"task {i} startTime fixed to {initialStartTime[i]}")
 
 
 def startTimesShouldNotExceedOneDay(
@@ -60,14 +80,17 @@ def tasksShouldNotExceedProjectTimeRange(
     duration = modelPrameters.duration
     projectTimeMax = modelPrameters.projectTimeMax
     projectTimeMin = modelPrameters.projectTimeMin
+    initialStartTime = modelPrameters.initialStartTime
 
     for i in modelPrameters.tasksIndicies:
+        if initialStartTime[i] != None: continue
         lp += (
             startTime[i] >= projectTimeMin[i] * isSheduled[i],
             f"startTime_greater_than_projectTimeMin_{i}",
         )
 
     for i in modelPrameters.tasksIndicies:
+        if initialStartTime[i] != None: continue
         lp += (
             startTime[i] + duration[i] <= projectTimeMax[i],
             f"endTime_less_than_projectTimeMax_{i}",

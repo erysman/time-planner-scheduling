@@ -1,11 +1,12 @@
+from typing import List, Optional, Tuple
 from src.model import scheduleTasks, Task, Project
 import unittest
 
 
 class TestCalculations(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.a = 10
+    # @classmethod
+    # def setUpClass(self):
+    #     self.a = 10
 
     def test_should_skip_task_with_lowest_priority(self):
         task1 = Task("A1", "", "A", 4, None, 8.5)
@@ -16,14 +17,176 @@ class TestCalculations(unittest.TestCase):
 
         projectA = Project("A", "", 0, 24)
         projectB = Project("B", "", 0, 24)
-        projectC = Project("C", "", 8, 24)
+        projectC = Project("C", "", 0, 24)
         projects = [projectA, projectB, projectC]
 
         resultTasks = scheduleTasks(tasks, projects)
-        self.assertEqual((resultTasks[0].id, resultTasks[0].startTime), ("A1", 0), "Task id or time is wrong.")
-        self.assertEqual((resultTasks[1].id, resultTasks[1].startTime), ("B1", 8.5), "Task id or time is wrong.")
-        self.assertEqual((resultTasks[2].id, resultTasks[2].startTime), ("B2", 16.0), "Task id or time is wrong.")
-        self.assertEqual((resultTasks[3].id, resultTasks[3].startTime), ("C1", None), "Task id or time is wrong.")
+        assertTaskStartTime(self, ("A1", 0), resultTasks)
+        assertTaskStartTime(self, ("B1", 8.5), resultTasks)
+        assertTaskStartTime(self, ("B2", 16.0), resultTasks)
+        assertTaskStartTime(self, ("C1", None), resultTasks)
+
+    def test_should_schedule_all_tasks_even_when_priorities_are_opposite1(self):
+        tasks = [
+            Task("A1", "", "A1", 1, None, 1),
+            Task("A2", "", "A2", 2, None, 1),
+            Task("A3", "", "A3", 3, None, 1),
+            Task("A4", "", "A4", 4, None, 1),
+        ]
+        projects = [
+            Project("A1", "", 0, 1),
+            Project("A2", "", 1, 2),
+            Project("A3", "", 2, 3),
+            Project("A4", "", 3, 4),
+        ]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0), resultTasks)
+        assertTaskStartTime(self, ("A2", 1.0), resultTasks)
+        assertTaskStartTime(self, ("A3", 2.0), resultTasks)
+        assertTaskStartTime(self, ("A4", 3.0), resultTasks)
+
+    def test_should_schedule_all_tasks_even_when_priorities_are_opposite2(self):
+        tasks = [
+            Task("A1", "", "A1", 1, None, 1),
+            Task("A2", "", "A2", 1, None, 1),
+            Task("A3", "", "A3", 1, None, 1),
+            Task("A4", "", "A4", 1, None, 1),
+            Task("B1", "", "B1", 1, None, 1),
+            Task("B2", "", "B2", 2, None, 1),
+            Task("B3", "", "B3", 3, None, 1),
+            Task("B4", "", "B4", 4, None, 1),
+        ]
+        projects = [
+            Project("A1", "", 0, 1),
+            Project("A2", "", 1, 2),
+            Project("A3", "", 2, 3),
+            Project("A4", "", 3, 4),
+            Project("B1", "", 4, 5),
+            Project("B2", "", 5, 6),
+            Project("B3", "", 6, 7),
+            Project("B4", "", 7, 8),
+        ]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0), resultTasks)
+        assertTaskStartTime(self, ("A2", 1.0), resultTasks)
+        assertTaskStartTime(self, ("A3", 2.0), resultTasks)
+        assertTaskStartTime(self, ("A4", 3.0), resultTasks)
+        assertTaskStartTime(self, ("B1", 4.0), resultTasks)
+        assertTaskStartTime(self, ("B2", 5.0), resultTasks)
+        assertTaskStartTime(self, ("B3", 6.0), resultTasks)
+        assertTaskStartTime(self, ("B4", 7.0), resultTasks)
+
+    def test_should_schedule_all_tasks_even_when_priorities_are_opposite3(self):
+        tasks = [
+            Task("A1", "", "A1", 1, None, 1),
+            Task("A2", "", "A2", 1, None, 1),
+            Task("A3", "", "A3", 1, None, 1),
+            Task("A4", "", "A4", 1, None, 1),
+            Task("B1", "", "B1", 1, None, 1),
+            Task("B2", "", "B2", 1, None, 1),
+            Task("B3", "", "B3", 1, None, 1),
+            Task("B4", "", "B4", 1, None, 1),
+            Task("C1", "", "C1", 1, None, 1),
+            Task("C2", "", "C2", 1, None, 1),
+            Task("C3", "", "C3", 1, None, 1),
+            Task("C4", "", "C4", 1, None, 1),
+            Task("D1", "", "D1", 1, None, 1),
+            Task("D2", "", "D2", 1, None, 1),
+            Task("D3", "", "D3", 1, None, 1),
+            Task("D4", "", "D4", 1, None, 1),
+            Task("E1", "", "E1", 1, None, 1),
+            Task("E2", "", "E2", 2, None, 1),
+            Task("E3", "", "E3", 3, None, 1),
+            Task("E4", "", "E4", 4, None, 1),
+        ]
+        projects = [
+            Project("A1", "", 0, 1),
+            Project("A2", "", 1, 2),
+            Project("A3", "", 2, 3),
+            Project("A4", "", 3, 4),
+            Project("B1", "", 4, 5),
+            Project("B2", "", 5, 6),
+            Project("B3", "", 6, 7),
+            Project("B4", "", 7, 8),
+            Project("C1", "", 8, 9),
+            Project("C2", "", 9, 10),
+            Project("C3", "", 10, 11),
+            Project("C4", "", 11, 12),
+            Project("D1", "", 12, 13),
+            Project("D2", "", 13, 14),
+            Project("D3", "", 14, 15),
+            Project("D4", "", 15, 16),
+            Project("E1", "", 16, 17),
+            Project("E2", "", 17, 18),
+            Project("E3", "", 18, 19),
+            Project("E4", "", 19, 20),
+        ]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0), resultTasks)
+        assertTaskStartTime(self, ("A2", 1.0), resultTasks)
+        assertTaskStartTime(self, ("A3", 2.0), resultTasks)
+        assertTaskStartTime(self, ("A4", 3.0), resultTasks)
+        assertTaskStartTime(self, ("B1", 4.0), resultTasks)
+        assertTaskStartTime(self, ("B2", 5.0), resultTasks)
+        assertTaskStartTime(self, ("B3", 6.0), resultTasks)
+        assertTaskStartTime(self, ("B4", 7.0), resultTasks)
+        assertTaskStartTime(self, ("C1", 8.0), resultTasks)
+        assertTaskStartTime(self, ("C2", 9.0), resultTasks)
+        assertTaskStartTime(self, ("C3", 10.0), resultTasks)
+        assertTaskStartTime(self, ("C4", 11.0), resultTasks)
+        assertTaskStartTime(self, ("D1", 12.0), resultTasks)
+        assertTaskStartTime(self, ("D2", 13.0), resultTasks)
+        assertTaskStartTime(self, ("D3", 14.0), resultTasks)
+        assertTaskStartTime(self, ("D4", 15.0), resultTasks)
+        assertTaskStartTime(self, ("E1", 16.0), resultTasks)
+        assertTaskStartTime(self, ("E2", 17.0), resultTasks)
+        assertTaskStartTime(self, ("E3", 18.0), resultTasks)
+        assertTaskStartTime(self, ("E4", 19.0), resultTasks)
+
+    def test_should_prioritize_task_with_higher_priority_then_two_tasks_of_lower_priority(
+        self,
+    ):
+        taskA1 = Task("A1", "", "A", 4, None, 8)
+        taskA2 = Task("A2", "", "A", 3, None, 8)
+        taskA3 = Task("A3", "", "A", 3, None, 8)
+        tasks = [taskA1, taskA2, taskA3]
+
+        projectA = Project("A", "", 0, 8)
+        projects = [projectA]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0), resultTasks)
+        assertTaskStartTime(self, ("A2", None), resultTasks)
+        assertTaskStartTime(self, ("A3", None), resultTasks)
+
+    def test_should_not_modify_initialized_start_time(
+        self,
+    ):
+        tasks = [Task("A1", "", "A", 1, 0.0, 4), Task("A2", "", "A", 4, 10.0, 4)]
+        projects = [Project("A", "", 0, 1)]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0.0), resultTasks)
+        assertTaskStartTime(self, ("A2", 10.0), resultTasks)
+
+
+def assertTaskStartTime(self, expect: Tuple[str, float], tasks: List[Task]):
+    id, startTime = expect
+    task = findTask(tasks, id)
+    self.assertEqual(
+        (task.id, task.startTime), (id, startTime), "Task id or time is wrong."
+    )
+
+
+def findTask(tasks: List[Task], id: str) -> Task:
+    match = [task for task in tasks if task.id == id]
+    if match:
+        return match[0]
+    else:
+        raise LookupError(f"Task id {id} not found")
 
 
 if __name__ == "__main__":
