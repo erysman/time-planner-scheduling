@@ -172,6 +172,35 @@ class TestCalculations(unittest.TestCase):
         assertTaskStartTime(self, ("A1", 0.0), resultTasks)
         assertTaskStartTime(self, ("A2", 10.0), resultTasks)
 
+    def test_should_schedule_tasks_as_early_as_possible0(
+        self,
+    ):
+        tasks = [
+            Task("A1", "", "A", 4, None, 4),
+            Task("A2", "", "A", 4, None, 4),
+            Task("A3", "", "A", 4, None, 4),
+        ]
+        projects = [Project("A", "", 0, 24)]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("A1", 0.0), resultTasks)
+        assertTaskStartTime(self, ("A2", 4.0), resultTasks)
+        assertTaskStartTime(self, ("A3", 8.0), resultTasks)
+        
+    def test_all_tasks_should_be_scheduled0(
+        self,
+    ):
+        taskDuration=0.25
+        hoursRange=2
+        tasksCount = int(hoursRange/taskDuration)
+        tasks = [Task(f"A{i}", "", "A", 1, None, 0.25) for i in range(0, tasksCount)]
+        projects = [Project("A", "", 24-hoursRange, 24)]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        numberOfScheduledTasks = sum(1 for task in resultTasks if task.startTime != None)
+        self.assertEqual(numberOfScheduledTasks, tasksCount, "Not all tasks were scheduled")
+        print("tasksCount", tasksCount)
+
 
 def assertTaskStartTime(self, expect: Tuple[str, float], tasks: List[Task]):
     id, startTime = expect

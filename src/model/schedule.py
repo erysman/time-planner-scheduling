@@ -44,10 +44,12 @@ def buildTasksListFromSolvedModel(
             startTime if isScheduled else None,
             task.duration,
         )
-        logging.debug(resultTask)
         resultTasks.append(resultTask)
-    # TODO append tasks, that were skipped because already had a startTime
-    return resultTasks
+    
+    sortedTasks = sorted(resultTasks, key=lambda t: t.startTime)
+    for t in sortedTasks:
+        logging.debug(t)
+    return sortedTasks
 
 
 # cplex jesli bedzie za wolno (mozna pobrać z ibm za darmo dla studentow)
