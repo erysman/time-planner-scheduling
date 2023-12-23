@@ -1,5 +1,5 @@
 from typing import List, Optional, Tuple
-from src.model import scheduleTasks, Task, Project
+from src.model import scheduleTasks, Task, Project, BannedRange
 import unittest
 
 
@@ -7,6 +7,14 @@ class TestCalculations(unittest.TestCase):
     # @classmethod
     # def setUpClass(self):
     #     self.a = 10
+    def assertAllTasksAreScheduled(self, tasksCount, resultTasks):
+        numberOfScheduledTasks = sum(
+            1 for task in resultTasks if task.startTime != None
+        )
+        self.assertEqual(
+            numberOfScheduledTasks, tasksCount, "Not all tasks were scheduled"
+        )
+        print("tasksCount", tasksCount)
 
     def test_should_skip_task_with_lowest_priority(self):
         task1 = Task("A1", "", "A", 4, None, 8.5)
@@ -211,23 +219,48 @@ class TestCalculations(unittest.TestCase):
         hoursRange = 5
         smallTasksCount = int(hoursRange / smallTaskDuration)
         tasks = [
-            Task(f"A{i}", "", "A", 1, None, smallTaskDuration) for i in range(0, smallTasksCount)
+            Task(f"A{i}", "", "A", 1, None, smallTaskDuration)
+            for i in range(0, smallTasksCount)
         ]
-        tasks.append(Task("B1", "", "B", 2, None, 24-hoursRange))
+        tasks.append(Task("B1", "", "B", 2, None, 24 - hoursRange))
         projects = [Project("A", "", 0, 24), Project("B", "", 0, 24)]
 
         resultTasks = scheduleTasks(tasks, projects)
         assertTaskStartTime(self, ("B1", 0.0), resultTasks)
         self.assertAllTasksAreScheduled(smallTasksCount + 1, resultTasks)
 
-    def assertAllTasksAreScheduled(self, tasksCount, resultTasks):
-        numberOfScheduledTasks = sum(
-            1 for task in resultTasks if task.startTime != None
-        )
-        self.assertEqual(
-            numberOfScheduledTasks, tasksCount, "Not all tasks were scheduled"
-        )
-        print("tasksCount", tasksCount)
+    def test_should_schedule_tasks_out_of_banned_ranges0(
+        self,
+    ):
+        tasks = [Task("A1", "", "A", 4, None, 6), Task("A2", "", "A", 3, None, 6)]
+        projects = [Project("A", "", 0, 24)]
+        bannedRanges = [BannedRange("R1", 0.0, 8.0), BannedRange("R2", 16.0, 24.0)]
+
+        resultTasks = scheduleTasks(tasks, projects, bannedRanges)
+        assertTaskStartTime(self, ("A1", 8.0), resultTasks)
+        assertTaskStartTime(self, ("A2", None), resultTasks)
+
+    def test_should_schedule_tasks_out_of_banned_ranges1(
+        self,
+    ):
+        tasks2 = [Task(f"A{i}", "", "A", i+1, None, 3) for i in range(1, 4)]
+        tasks1 = [Task(f"A{i}", "", "A", 1, None, 3) for i in range(4, 7)]
+        tasks = tasks2 + tasks1
+        projects = [Project("A", "", 0, 24)]
+        bannedRanges = [
+            BannedRange("R1", 0.0, 3.0),
+            BannedRange("R2", 6.0, 9.0),
+            BannedRange("R2", 12.0, 15.0),
+            BannedRange("R2", 18.0, 24.0),
+        ]
+
+        resultTasks = scheduleTasks(tasks, projects, bannedRanges)
+        assertTaskStartTime(self, ("A3", 3.0), resultTasks)
+        assertTaskStartTime(self, ("A2", 9.0), resultTasks)
+        assertTaskStartTime(self, ("A1", 15.0), resultTasks)
+        assertTaskStartTime(self, ("A4", None), resultTasks)
+        assertTaskStartTime(self, ("A5", None), resultTasks)
+        assertTaskStartTime(self, ("A6", None), resultTasks)
 
 
 def assertTaskStartTime(self, expect: Tuple[str, float], tasks: List[Task]):

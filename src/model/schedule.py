@@ -9,15 +9,15 @@ from .parameters import (
     getModelParameters,
     timeNormalizationValue
 )
-from .type import Project, Task
+from .type import BannedRange, Project, Task
 from typing import List
 
 logging.basicConfig(level=logging.DEBUG)
 
-def scheduleTasks(tasks: List[Task], projects: List[Project]) -> List[Task]:
+def scheduleTasks(tasks: List[Task], projects: List[Project], bannedRanges: List[BannedRange]=[]) -> List[Task]:
     # print(pulp.listSolvers(onlyAvailable=True))
-    modelPrameters = getModelParameters(tasks, projects)
-    decisionVariables = getDecisionVariables(modelPrameters.tasksIndicies)
+    modelPrameters = getModelParameters(tasks, projects, bannedRanges)
+    decisionVariables = getDecisionVariables(modelPrameters.tasksIndicies, modelPrameters.bannedRangesIndicies)
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
     setObjectiveFunction(lp, decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)

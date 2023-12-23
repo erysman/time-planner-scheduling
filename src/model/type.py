@@ -24,7 +24,15 @@ class Task:
             f"priority={self.priority}, startTime={self.startTime}, duration={self.duration})"
         )
 
+class TimeRange:
+    def __init__(self, timeRangeStart: float, timeRangeEnd: float):
+        self.timeRangeStart = timeRangeStart
+        self.timeRangeEnd = timeRangeEnd
 
+    def __str__(self):
+        return f"timeRangeStart={self.timeRangeStart}, timeRangeEnd={self.timeRangeEnd}"
+
+    
 class Project:
     def __init__(self, id: str, name: str, timeRangeStart: float, timeRangeEnd: float):
         self.id = id
@@ -37,3 +45,13 @@ class Project:
             f"Project(id={self.id}, name={self.name}, "
             f"timeRangeStart={self.timeRangeStart}, timeRangeEnd={self.timeRangeEnd})"
         )
+
+
+class BannedRange(TimeRange):
+    def __init__(self, id: str, timeRangeStart: float, timeRangeEnd: float):
+        super().__init__(timeRangeStart, timeRangeEnd)
+        self.id = id
+
+    def __str__(self):
+        return f"BannedRange(id={self.id}, {super().__str__()})"
+
