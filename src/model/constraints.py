@@ -1,7 +1,7 @@
 import logging
 import pulp
 import pprint
-from .parameters import DecisionVariables, ModelParameters
+from .parameters import DecisionVariables, ModelParameters, timeNormalizationValue
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -47,7 +47,7 @@ def startTimesShouldNotExceedOneDay(
         lp += (startTime[i] >= 0, f"startTime_greater_than_0_{i}")
 
     for i in modelPrameters.tasksIndicies:
-        lp += (startTime[i] + duration[i] <= 24, f"endTime_less_then_24_{i}")
+        lp += (startTime[i] + duration[i] <= 24/timeNormalizationValue, f"endTime_less_then_24_{i}")
 
 
 def tasksShouldNotOverlapInTime(

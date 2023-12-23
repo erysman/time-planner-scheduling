@@ -7,6 +7,7 @@ from .parameters import (
     ModelParameters,
     getDecisionVariables,
     getModelParameters,
+    timeNormalizationValue
 )
 from .type import Project, Task
 from typing import List
@@ -20,7 +21,7 @@ def scheduleTasks(tasks: List[Task], projects: List[Project]) -> List[Task]:
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
     setObjectiveFunction(lp, decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)
-    solver = pulp.getSolver("GLPK_CMD", msg=0)
+    solver = pulp.getSolver("GLPK_CMD", msg=0, timeLimit=5) #5
     lp.solve(solver)
     logSolution(lp)
     return buildTasksListFromSolvedModel(lp, modelPrameters, tasks)
@@ -41,12 +42,12 @@ def buildTasksListFromSolvedModel(
             task.name,
             task.projectId,
             task.priority,
-            startTime if isScheduled else None,
+            round(startTime*timeNormalizationValue/0.25)*0.25 if isScheduled else None,
             task.duration,
         )
         resultTasks.append(resultTask)
     
-    sortedTasks = sorted(resultTasks, key=lambda t: t.startTime)
+    sortedTasks = sorted(resultTasks, key=lambda t: (t.startTime is None, t.startTime))
     for t in sortedTasks:
         logging.debug(t)
     return sortedTasks

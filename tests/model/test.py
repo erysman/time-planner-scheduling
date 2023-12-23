@@ -176,29 +176,57 @@ class TestCalculations(unittest.TestCase):
         self,
     ):
         tasks = [
-            Task("A1", "", "A", 4, None, 4),
-            Task("A2", "", "A", 4, None, 4),
-            Task("A3", "", "A", 4, None, 4),
+            Task("A1", "", "A", 4, None, 4.0),
+            Task("A2", "", "A", 4, None, 4.0),
+            Task("A3", "", "A", 4, None, 4.0),
         ]
         projects = [Project("A", "", 0, 24)]
 
         resultTasks = scheduleTasks(tasks, projects)
-        assertTaskStartTime(self, ("A1", 0.0), resultTasks)
-        assertTaskStartTime(self, ("A2", 4.0), resultTasks)
-        assertTaskStartTime(self, ("A3", 8.0), resultTasks)
-        
+        numberOfEarlyTasks = sum(1 for task in resultTasks if task.startTime <= 8.0)
+        self.assertEqual(
+            numberOfEarlyTasks,
+            len(tasks),
+            "Not all tasks are scheduled as early as possible",
+        )
+
     def test_all_tasks_should_be_scheduled0(
         self,
     ):
-        taskDuration=0.25
-        hoursRange=2
-        tasksCount = int(hoursRange/taskDuration)
-        tasks = [Task(f"A{i}", "", "A", 1, None, 0.25) for i in range(0, tasksCount)]
-        projects = [Project("A", "", 24-hoursRange, 24)]
+        taskDuration = 0.25
+        hoursRange = 5
+        tasksCount = int(hoursRange / taskDuration)
+        tasks = [
+            Task(f"A{i}", "", "A", 1, None, taskDuration) for i in range(0, tasksCount)
+        ]
+        projects = [Project("A", "", 24 - hoursRange, 24)]
 
         resultTasks = scheduleTasks(tasks, projects)
-        numberOfScheduledTasks = sum(1 for task in resultTasks if task.startTime != None)
-        self.assertEqual(numberOfScheduledTasks, tasksCount, "Not all tasks were scheduled")
+        self.assertAllTasksAreScheduled(tasksCount, resultTasks)
+
+    def test_should_schedule_high_priority_tasks_earlier_then_short_tasks0(
+        self,
+    ):
+        smallTaskDuration = 0.25
+        hoursRange = 5
+        smallTasksCount = int(hoursRange / smallTaskDuration)
+        tasks = [
+            Task(f"A{i}", "", "A", 1, None, smallTaskDuration) for i in range(0, smallTasksCount)
+        ]
+        tasks.append(Task("B1", "", "B", 2, None, 24-hoursRange))
+        projects = [Project("A", "", 0, 24), Project("B", "", 0, 24)]
+
+        resultTasks = scheduleTasks(tasks, projects)
+        assertTaskStartTime(self, ("B1", 0.0), resultTasks)
+        self.assertAllTasksAreScheduled(smallTasksCount + 1, resultTasks)
+
+    def assertAllTasksAreScheduled(self, tasksCount, resultTasks):
+        numberOfScheduledTasks = sum(
+            1 for task in resultTasks if task.startTime != None
+        )
+        self.assertEqual(
+            numberOfScheduledTasks, tasksCount, "Not all tasks were scheduled"
+        )
         print("tasksCount", tasksCount)
 
 

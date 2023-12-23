@@ -1,6 +1,6 @@
 import logging
 import pulp
-from .parameters import DecisionVariables, ModelParameters
+from .parameters import DecisionVariables, ModelParameters, timeNormalizationValue
 import math
 
 
@@ -10,13 +10,14 @@ def setObjectiveFunction(
     modelPrameters: ModelParameters,
 ):
     tasksCount = len(modelPrameters.tasksIds)
-    weight = max((3 * tasksCount - 6, 2))  # math.comb(tasksCount, 2)
-    logging.info(f"using objective weight: {weight}")
+    numberOfTasksWeight = max((3 * tasksCount - 6, 2))  # math.comb(tasksCount, 2)
+    logging.info(f"using objective numberOfTasksWeight: {numberOfTasksWeight}")
+    earlierStartsWeight = 0.25
     lp += (
-        weight
+        numberOfTasksWeight
         * maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
-        + maximizeEarlierStartTimes(decisionVariables, modelPrameters)
-        - penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters),
+        - penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters)
+        + earlierStartsWeight * maximizeEarlierStartTimes(decisionVariables, modelPrameters),
         "objective",
     )
 
@@ -27,7 +28,11 @@ def maximizeEarlierStartTimes(
     tasksIndicies = modelPrameters.tasksIndicies
     startTime = decisionVariables.startTime
 
-    return pulp.lpSum([(24-startTime[i]) for i in tasksIndicies])/24
+    return (
+        pulp.lpSum([(-startTime[i]) for i in tasksIndicies])
+        * timeNormalizationValue
+        / 24
+    )
 
 
 def penalizeTasksNotOrderedByPriority(

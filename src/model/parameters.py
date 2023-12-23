@@ -4,6 +4,7 @@ from .utils import generatePairs, generate2dArray
 import math
 from typing import Literal, List,TypedDict
 
+timeNormalizationValue=1
 
 class ModelParameters:
     def __init__(
@@ -36,16 +37,16 @@ def calculatePriorityWeight(priority):
 def getModelParameters(tasks: List[Task], projects: List[Project]) -> ModelParameters:
     tasksIds = [task.id for task in tasks]
     tasksIndicies: List[int] = range(0, len(tasksIds))
-    initialStartTime = [task.startTime for task in tasks]
+    initialStartTime = [(task.startTime/timeNormalizationValue if task.startTime != None else task.startTime) for task in tasks]
     priority = [task.priority for task in tasks]
     maxPriority = max(priority)
     priorityWeight = {}
     for i in range(1, maxPriority+1):
         priorityWeight[i] = calculatePriorityWeight(i)
-    duration = [task.duration for task in tasks]
+    duration = [task.duration/timeNormalizationValue for task in tasks]
     projectTimeMin = [
         next(
-            project.timeRangeStart
+            project.timeRangeStart/timeNormalizationValue
             for project in projects
             if project.id == task.projectId
         )
@@ -53,7 +54,7 @@ def getModelParameters(tasks: List[Task], projects: List[Project]) -> ModelParam
     ]
     projectTimeMax = [
         next(
-            project.timeRangeEnd for project in projects if project.id == task.projectId
+            project.timeRangeEnd/timeNormalizationValue for project in projects if project.id == task.projectId
         )
         for task in tasks
     ]
@@ -85,7 +86,7 @@ class DecisionVariables:
 
 def getDecisionVariables(tasksIndicies: List[int]) -> DecisionVariables:
     startTime = pulp.LpVariable.dicts(
-        "startTime", tasksIndicies, lowBound=0, upBound=24, cat="Continuous"
+        "startTime", tasksIndicies, lowBound=0, upBound=24/timeNormalizationValue, cat="Continuous"
     )
     isSheduled = pulp.LpVariable.dicts(
         "isScheduled", tasksIndicies, lowBound=0, cat="Binary"
