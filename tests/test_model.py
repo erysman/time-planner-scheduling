@@ -243,7 +243,7 @@ class TestCalculations(unittest.TestCase):
     def test_should_schedule_tasks_out_of_banned_ranges1(
         self,
     ):
-        tasks2 = [Task(f"A{i}", "", "A", i+1, None, 3) for i in range(1, 4)]
+        tasks2 = [Task(f"A{i}", "", "A", i + 1, None, 3) for i in range(1, 4)]
         tasks1 = [Task(f"A{i}", "", "A", 1, None, 3) for i in range(4, 7)]
         tasks = tasks2 + tasks1
         projects = [Project("A", "", 0, 24)]
@@ -261,6 +261,45 @@ class TestCalculations(unittest.TestCase):
         assertTaskStartTime(self, ("A4", None), resultTasks)
         assertTaskStartTime(self, ("A5", None), resultTasks)
         assertTaskStartTime(self, ("A6", None), resultTasks)
+
+    def test_complex_case0(
+        self,
+    ):
+        # 4 projects
+        # 2 banned ranges
+        # >10 tasks with different priorities
+        defaultTasks = [
+            Task(f"A1", "Odkurzyć", "A", 1, None, 0.5),
+            Task(f"A2", "Duże zakupy", "A", 2, None, 1),
+            Task(f"A3", "Wizyta internista", "A", 4, 12.0, 1),
+            Task(f"A4", "Przygotować obiad na kolejne dni", "A", 2, None, 1),
+        ]
+        morningTasks = [
+            Task(f"D1", "Medytacja", "D", 3, None, 0.25),
+            Task(f"D2", "Spacer", "D", 2, None, 0.5),
+        ]
+        workTasks = [
+            Task(f"B1", "Naprawić buga w feature A", "B", 4, None, 3),
+            Task(f"B2", "Testy jednostkowe do feature A", "B", 3, None, 3),
+            Task(f"B3", "Przeanalizować wymagania do feature X", "B", 1, None, 2),
+        ]
+        hobbyTasks = [
+            Task(f"C1", "Bieganie", "C", 3, None, 1),
+            Task(f"C2", "Czytanie", "C", 2, None, 0.5),
+            Task(f"C3", "Pianino", "C", 1, None, 1),
+        ]
+        tasks = workTasks + hobbyTasks + defaultTasks + morningTasks
+        projects = [
+            Project("D", "morning", 8, 10),
+            Project("A", "default", 0, 24),
+            Project("B", "work", 9, 17),
+            Project("C", "hobby", 17, 22),
+        ]
+        bannedRanges = [BannedRange("R1", 0.0, 8.0), BannedRange("R2", 22.0, 24.0)]
+
+        resultTasks = scheduleTasks(tasks, projects, bannedRanges)
+        self.assertAllTasksAreScheduled(len(tasks)-1, resultTasks)
+        assertTaskStartTime(self, ("B3", None), resultTasks)
 
 
 def assertTaskStartTime(self, expect: Tuple[str, float], tasks: List[Task]):
