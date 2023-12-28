@@ -14,15 +14,14 @@ def setObjectiveFunction(
     logging.info(f"using objective numberOfTasksWeight: {numberOfTasksWeight}")
     earlierStartsWeight = 0.25
     lp += (
-        numberOfTasksWeight
-        * maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
-        - penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters)
-        + earlierStartsWeight * maximizeEarlierStartTimes(decisionVariables, modelPrameters),
+        numberOfTasksWeight * maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
+        + penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters)
+        + earlierStartsWeight * penalizeLateStartTimes(decisionVariables, modelPrameters),
         "objective",
     )
 
 
-def maximizeEarlierStartTimes(
+def penalizeLateStartTimes(
     decisionVariables: DecisionVariables, modelPrameters: ModelParameters
 ):
     tasksIndicies = modelPrameters.tasksIndicies
@@ -41,7 +40,7 @@ def penalizeTasksNotOrderedByPriority(
     tasksPairs = modelPrameters.tasksPairs
     isIPriorityGreaterThanJ = modelPrameters.isIPriorityGreaterThanJ
     isIafterJ = decisionVariables.isIafterJ
-    return pulp.lpSum(
+    return -pulp.lpSum(
         [isIafterJ[i][j] * isIPriorityGreaterThanJ[i][j] for i, j in tasksPairs]
     )
 

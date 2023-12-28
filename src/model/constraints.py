@@ -15,11 +15,11 @@ def addConstraints(
     startTimesShouldNotExceedOneDay(lp, decisionVariables, modelPrameters)
     tasksShouldNotOverlapInTime(lp, decisionVariables, modelPrameters)
     tasksShouldNotExceedProjectTimeRange(lp, decisionVariables, modelPrameters)
-    tasksShouldNotOverlapWothBannedRanges(lp, decisionVariables, modelPrameters)
+    tasksShouldNotOverlapWithBannedRanges(lp, decisionVariables, modelPrameters)
     logging.debug(pp.pformat(lp.constraints))
 
 
-def tasksShouldNotOverlapWothBannedRanges(
+def tasksShouldNotOverlapWithBannedRanges(
     lp: pulp.LpProblem,
     decisionVariables: DecisionVariables,
     modelPrameters: ModelParameters,

@@ -7,54 +7,77 @@ from .parameters import (
     ModelParameters,
     getDecisionVariables,
     getModelParameters,
-    timeNormalizationValue
+    timeNormalizationValue,
 )
-from .type import BannedRange, Project, Task
+from .type import BannedRange, Project, ScheduledTask, Task
 from typing import List
 
-logging.basicConfig(level=logging.DEBUG)
+timeGranularity = 0.25  # 0.25 = 15 minutes
 
-def scheduleTasks(tasks: List[Task], projects: List[Project], bannedRanges: List[BannedRange]=[]) -> List[Task]:
+# logging.basicConfig(level=logging.DEBUG)
+
+
+def scheduleTasks(
+    tasks: List[Task],
+    projects: List[Project],
+    bannedRanges: List[BannedRange] = [],
+    debug=False,
+) -> List[Task]:
     # print(pulp.listSolvers(onlyAvailable=True))
     modelPrameters = getModelParameters(tasks, projects, bannedRanges)
-    decisionVariables = getDecisionVariables(modelPrameters.tasksIndicies, modelPrameters.bannedRangesIndicies)
+    decisionVariables = getDecisionVariables(
+        modelPrameters.tasksIndicies, modelPrameters.bannedRangesIndicies
+    )
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
     setObjectiveFunction(lp, decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)
-    solver = pulp.getSolver("GLPK_CMD", msg=0, timeLimit=5) #5
+    solver = pulp.getSolver("GLPK_CMD", msg=0, timeLimit=5)  # 5
     lp.solve(solver)
     logSolution(lp)
-    return buildTasksListFromSolvedModel(lp, modelPrameters, tasks)
+    return buildTasksListFromSolvedModel(lp, modelPrameters, tasks, debug)
 
 
 def buildTasksListFromSolvedModel(
-    lp: pulp.LpProblem, modelPrameters: ModelParameters, tasks: List[Task]
+    lp: pulp.LpProblem, modelPrameters: ModelParameters, tasks: List[Task], debug=False
 ) -> List[Task]:
     solvedVariables = lp.variablesDict()
-    resultTasks = []
+    allTasks = []
+    scheduledTasks = []
     for i in modelPrameters.tasksIndicies:
         isScheduled = pulp.value(solvedVariables[f"isScheduled_{i}"])
+        if not isScheduled:
+            continue
         startTime = pulp.value(solvedVariables[f"startTime_{i}"])
         taskId = modelPrameters.tasksIds[i]
-        task = [task for task in tasks if task.id == taskId][0]
-        resultTask = Task(
+        if startTime == None:
+            raise Exception(f"Task {taskId} is scheduled, but doesn't have startTime!")
+        resultTask = ScheduledTask(
             taskId,
-            task.name,
-            task.projectId,
-            task.priority,
-            round(startTime*timeNormalizationValue/0.25)*0.25 if isScheduled else None,
-            task.duration,
+            round(startTime * timeNormalizationValue / timeGranularity)
+            * timeGranularity,
         )
-        resultTasks.append(resultTask)
-    
-    sortedTasks = sorted(resultTasks, key=lambda t: (t.startTime is None, t.startTime))
-    for t in sortedTasks:
-        logging.debug(t)
-    return sortedTasks
-
-
-# cplex jesli bedzie za wolno (mozna pobrać z ibm za darmo dla studentow)
-# timeout w pulp
+        scheduledTasks.append(resultTask)
+        if debug:
+            task = [task for task in tasks if task.id == taskId][0]
+            resultTask = Task(
+                task.id,
+                task.name,
+                task.projectId,
+                task.priority,
+                round(startTime * timeNormalizationValue / 0.25) * 0.25
+                if isScheduled
+                else None,
+                task.duration,
+            )
+            allTasks.append(resultTask)
+    if debug:
+        sortedTasks = sorted(allTasks, key=lambda t: (t.startTime is None, t.startTime))
+        for t in sortedTasks:
+            logging.debug(t)
+    sortedScheduledTasks = sorted(
+        scheduledTasks, key=lambda t: (t.startTime is None, t.startTime)
+    )
+    return sortedScheduledTasks
 
 
 def logSolution(lp: pulp.LpProblem):
