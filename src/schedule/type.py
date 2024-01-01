@@ -26,7 +26,7 @@ class TaskSchema(Schema):
     projectId = fields.Str(required=True)
     priority = fields.Integer(validate=validate.OneOf([1, 2, 3, 4]), required=True)
     startTime = fields.Float(allow_none=True)
-    duration = fields.Integer(required=True)
+    duration = fields.Float(required=True)
 
     @post_load
     def make_task(self, data, **kwargs):

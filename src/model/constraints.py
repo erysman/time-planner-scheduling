@@ -34,7 +34,7 @@ def tasksShouldNotOverlapWithBannedRanges(
         for a in modelPrameters.bannedRangesIndicies:
             lp += (
                 startTime[i] + duration[i] * isSheduled[i]
-                <= bannedRangeStartTime[a] + 1000*(isTaskIafterRangeA[i][a]),
+                <= bannedRangeStartTime[a] + 1000 * (isTaskIafterRangeA[i][a]),
                 f"task{i}_endTime_less_than_bannedRange{a}_startTime",
             )
             lp += (
@@ -52,7 +52,6 @@ def someStartTimesAreAlreadySet(
     startTime = decisionVariables.startTime
     isSheduled = decisionVariables.isSheduled
     initialStartTime = modelPrameters.initialStartTime
-
     for i in modelPrameters.tasksIndicies:
         if initialStartTime[i] != None:
             startTime[i].setInitialValue(initialStartTime[i])
@@ -92,7 +91,7 @@ def tasksShouldNotOverlapInTime(
     for i, j in modelPrameters.tasksPairs:
         lp += (
             startTime[i] + modelPrameters.duration[i] * isSheduled[i]
-            <= startTime[j] + 1000 * isIafterJ[i][j] + 1000 * (1 - isSheduled[j]),
+            <= startTime[j] + 1000 * isIafterJ[i][j] + 1000 - 1000 * isSheduled[j],
             f"tasks_{i}_{j}_cant_overlap",
         )
         lp += (isIafterJ[i][j] + isIafterJ[j][i] <= 1, f"tasks_{i}_{j}_cant_overlap2")

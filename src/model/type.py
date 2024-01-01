@@ -21,7 +21,7 @@ class Task:
         projectId: str,
         priority: Literal[1, 2, 3, 4],
         startTime: Optional[float],
-        duration: int,
+        duration: float,
     ):
         self.id = id
         self.name = name

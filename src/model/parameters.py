@@ -1,3 +1,4 @@
+import logging
 import pulp
 from .type import BannedRange, Project, Task
 from .utils import generatePairs, generate2dArray
