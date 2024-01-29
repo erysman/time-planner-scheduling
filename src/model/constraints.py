@@ -16,7 +16,7 @@ def addConstraints(
     tasksShouldNotOverlapInTime(lp, decisionVariables, modelPrameters)
     tasksShouldNotExceedProjectTimeRange(lp, decisionVariables, modelPrameters)
     tasksShouldNotOverlapWithBannedRanges(lp, decisionVariables, modelPrameters)
-    logging.debug(pp.pformat(lp.constraints))
+    # logging.debug(pp.pformat(lp.constraints))
 
 
 def tasksShouldNotOverlapWithBannedRanges(
@@ -24,6 +24,7 @@ def tasksShouldNotOverlapWithBannedRanges(
     decisionVariables: DecisionVariables,
     modelPrameters: ModelParameters,
 ):
+    initialStartTime = modelPrameters.initialStartTime
     startTime = decisionVariables.startTime
     isSheduled = decisionVariables.isSheduled
     isTaskIafterRangeA = decisionVariables.isTaskIafterRangeA
@@ -31,16 +32,18 @@ def tasksShouldNotOverlapWithBannedRanges(
     bannedRangeStartTime = modelPrameters.bannedRangeStartTime
     bannedRangeEndTime = modelPrameters.bannedRangeEndTime
     for i in modelPrameters.tasksIndicies:
-        for a in modelPrameters.bannedRangesIndicies:
+        if initialStartTime[i] != None:
+            continue;
+        for k in modelPrameters.bannedRangesIndicies:
             lp += (
                 startTime[i] + duration[i] * isSheduled[i]
-                <= bannedRangeStartTime[a] + 1000 * (isTaskIafterRangeA[i][a]),
-                f"task{i}_endTime_less_than_bannedRange{a}_startTime",
+                <= bannedRangeStartTime[k] + 1000 * (isTaskIafterRangeA[i][k]),
+                f"task{i}_endTime_less_than_bannedRange{k}_startTime",
             )
             lp += (
                 startTime[i] + 1000 * (1 - isSheduled[i])
-                >= bannedRangeEndTime[a] * (isTaskIafterRangeA[i][a]),
-                f"task{i}_startTime_greater_than_bannedRange{a}_endTime",
+                >= bannedRangeEndTime[k] * (isTaskIafterRangeA[i][k]),
+                f"task{i}_startTime_greater_than_bannedRange{k}_endTime",
             )
 
 
@@ -87,8 +90,11 @@ def tasksShouldNotOverlapInTime(
     startTime = decisionVariables.startTime
     isSheduled = decisionVariables.isSheduled
     isIafterJ = decisionVariables.isIafterJ
+    initialStartTime = modelPrameters.initialStartTime
 
     for i, j in modelPrameters.tasksPairs:
+        if initialStartTime[i] != None and initialStartTime[j] != None:
+            continue
         lp += (
             startTime[i] + modelPrameters.duration[i] * isSheduled[i]
             <= startTime[j] + 1000 * isIafterJ[i][j] + 1000 - 1000 * isSheduled[j],

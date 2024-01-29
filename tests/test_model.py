@@ -20,6 +20,7 @@ class TestCalculations(unittest.TestCase):
         print("tasksCount", tasksCount)
 
     def test_should_skip_task_with_lowest_priority(self):
+        #given
         task1 = Task("A1", "", "A", 4, None, 8.5)
         task2 = Task("B1", "", "B", 3, None, 7.5)
         task3 = Task("B2", "", "B", 2, None, 8)
@@ -30,14 +31,16 @@ class TestCalculations(unittest.TestCase):
         projectB = Project("B", "", 0, 24)
         projectC = Project("C", "", 0, 24)
         projects = [projectA, projectB, projectC]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         self.assertAllTasksAreScheduled(3, resultTasks)
         assertTaskStartTime(self, ("A1", 0), resultTasks)
         assertTaskStartTime(self, ("B1", 8.5), resultTasks)
         assertTaskStartTime(self, ("B2", 16.0), resultTasks)
 
     def test_should_schedule_all_tasks_even_when_priorities_are_opposite1(self):
+        #given
         tasks = [
             Task("A1", "", "A1", 1, None, 1),
             Task("A2", "", "A2", 2, None, 1),
@@ -50,8 +53,9 @@ class TestCalculations(unittest.TestCase):
             Project("A3", "", 2, 3),
             Project("A4", "", 3, 4),
         ]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         self.assertAllTasksAreScheduled(4, resultTasks)
         assertTaskStartTime(self, ("A1", 0), resultTasks)
         assertTaskStartTime(self, ("A2", 1.0), resultTasks)
@@ -59,6 +63,7 @@ class TestCalculations(unittest.TestCase):
         assertTaskStartTime(self, ("A4", 3.0), resultTasks)
 
     def test_should_schedule_all_tasks_even_when_priorities_are_opposite2(self):
+        #given
         tasks = [
             Task("A1", "", "A1", 1, None, 1),
             Task("A2", "", "A2", 1, None, 1),
@@ -79,8 +84,9 @@ class TestCalculations(unittest.TestCase):
             Project("B3", "", 6, 7),
             Project("B4", "", 7, 8),
         ]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         assertTaskStartTime(self, ("A1", 0), resultTasks)
         assertTaskStartTime(self, ("A2", 1.0), resultTasks)
         assertTaskStartTime(self, ("A3", 2.0), resultTasks)
@@ -91,6 +97,7 @@ class TestCalculations(unittest.TestCase):
         assertTaskStartTime(self, ("B4", 7.0), resultTasks)
 
     def test_should_schedule_all_tasks_even_when_priorities_are_opposite3(self):
+        #given
         tasks = [
             Task("A1", "", "A1", 1, None, 1),
             Task("A2", "", "A2", 1, None, 1),
@@ -135,8 +142,9 @@ class TestCalculations(unittest.TestCase):
             Project("E3", "", 18, 19),
             Project("E4", "", 19, 20),
         ]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         assertTaskStartTime(self, ("A1", 0), resultTasks)
         assertTaskStartTime(self, ("A2", 1.0), resultTasks)
         assertTaskStartTime(self, ("A3", 2.0), resultTasks)
@@ -161,6 +169,7 @@ class TestCalculations(unittest.TestCase):
     def test_should_prioritize_task_with_higher_priority_then_two_tasks_of_lower_priority(
         self,
     ):
+        #given
         taskA1 = Task("A1", "", "A", 4, None, 8)
         taskA2 = Task("A2", "", "A", 3, None, 8)
         taskA3 = Task("A3", "", "A", 3, None, 8)
@@ -168,31 +177,36 @@ class TestCalculations(unittest.TestCase):
 
         projectA = Project("A", "", 0, 8)
         projects = [projectA]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         self.assertCountEqual([ScheduledTask("A1", 0)], resultTasks)
 
     def test_should_not_modify_initialized_start_time(
         self,
     ):
+        #given
         tasks = [Task("A1", "", "A", 1, 0.0, 4), Task("A2", "", "A", 4, 10.0, 4)]
         projects = [Project("A", "", 0, 1)]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         assertTaskStartTime(self, ("A1", 0.0), resultTasks)
         assertTaskStartTime(self, ("A2", 10.0), resultTasks)
 
     def test_should_schedule_tasks_as_early_as_possible0(
         self,
     ):
+        #given
         tasks = [
             Task("A1", "", "A", 4, None, 4.0),
             Task("A2", "", "A", 4, None, 4.0),
             Task("A3", "", "A", 4, None, 4.0),
         ]
         projects = [Project("A", "", 0, 24)]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         numberOfEarlyTasks = sum(1 for task in resultTasks if task.startTime <= 8.0)
         self.assertEqual(
             numberOfEarlyTasks,
@@ -203,6 +217,7 @@ class TestCalculations(unittest.TestCase):
     def test_all_tasks_should_be_scheduled0(
         self,
     ):
+        #given
         taskDuration = 0.25
         hoursRange = 5
         tasksCount = int(hoursRange / taskDuration)
@@ -210,13 +225,15 @@ class TestCalculations(unittest.TestCase):
             Task(f"A{i}", "", "A", 1, None, taskDuration) for i in range(0, tasksCount)
         ]
         projects = [Project("A", "", 24 - hoursRange, 24)]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         self.assertAllTasksAreScheduled(tasksCount, resultTasks)
 
     def test_should_schedule_high_priority_tasks_earlier_then_short_tasks0(
         self,
     ):
+        #given
         smallTaskDuration = 0.25
         hoursRange = 5
         smallTasksCount = int(hoursRange / smallTaskDuration)
@@ -226,24 +243,28 @@ class TestCalculations(unittest.TestCase):
         ]
         tasks.append(Task("B1", "", "B", 2, None, 24 - hoursRange))
         projects = [Project("A", "", 0, 24), Project("B", "", 0, 24)]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, debug=True)
+        #then
         assertTaskStartTime(self, ("B1", 0.0), resultTasks)
         self.assertAllTasksAreScheduled(smallTasksCount + 1, resultTasks)
 
     def test_should_schedule_tasks_out_of_banned_ranges0(
         self,
     ):
+        #given
         tasks = [Task("A1", "", "A", 4, None, 6), Task("A2", "", "A", 3, None, 6)]
         projects = [Project("A", "", 0, 24)]
         bannedRanges = [BannedRange("R1", 0.0, 8.0), BannedRange("R2", 16.0, 24.0)]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, bannedRanges, debug=True)
+        #then
         self.assertCountEqual([ScheduledTask("A1", 8.0)], resultTasks)
 
     def test_should_schedule_tasks_out_of_banned_ranges1(
         self,
     ):
+        #given
         tasks2 = [Task(f"A{i}", "", "A", i + 1, None, 3) for i in range(1, 4)]
         tasks1 = [Task(f"A{i}", "", "A", 1, None, 3) for i in range(4, 7)]
         tasks = tasks2 + tasks1
@@ -254,19 +275,21 @@ class TestCalculations(unittest.TestCase):
             BannedRange("R2", 12.0, 15.0),
             BannedRange("R2", 18.0, 24.0),
         ]
-
+        #when
         resultTasks = scheduleTasks(tasks, projects, bannedRanges, debug=True)
+        #then
         self.assertAllTasksAreScheduled(3, resultTasks)
         assertTaskStartTime(self, ("A3", 3.0), resultTasks)
         assertTaskStartTime(self, ("A2", 9.0), resultTasks)
         assertTaskStartTime(self, ("A1", 15.0), resultTasks)
 
+    # 4 projects
+    # 2 banned ranges
+    # >10 tasks with different priorities
     def test_complex_case0(
         self,
     ):
-        # 4 projects
-        # 2 banned ranges
-        # >10 tasks with different priorities
+        #given
         defaultTasks = [
             Task(f"A1", "Odkurzyć", "A", 1, None, 0.5),
             Task(f"A2", "Duże zakupy", "A", 2, None, 1),
@@ -295,15 +318,13 @@ class TestCalculations(unittest.TestCase):
             Project("C", "hobby", 17, 22),
         ]
         bannedRanges = [BannedRange("R1", 0.0, 8.0), BannedRange("R2", 22.0, 24.0)]
-        # print(ScheduleTasksRequestDTOSchema().dumps(ScheduleTasksRequestDTO(tasks, projects, bannedRanges)))
-        
+        #when       
         resultTasks = scheduleTasks(tasks, projects, bannedRanges, debug=True)
+        #then
         self.assertAllTasksAreScheduled(len(tasks)-1, resultTasks)
         self.assertNotIn(ScheduledTask("B3", None), resultTasks)
         self.assertIn(ScheduledTask("B1", 9.0), resultTasks)
         self.assertIn(ScheduledTask("B2", 13.0), resultTasks)
-        
-        # print(ScheduleTasksResponseDTOSchema().dumps(ScheduleTasksResponseDTO(resultTasks, "1")))
 
 
 def assertTaskStartTime(self, expect: Tuple[str, float], tasks: List[Task]):

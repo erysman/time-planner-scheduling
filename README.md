@@ -1,3 +1,7 @@
+
+Run tests:
+`python3 -m unittest tests.test_model.TestCalculations`
+
 Start server:
 `python3 main.py`
 
