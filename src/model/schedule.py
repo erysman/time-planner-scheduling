@@ -2,44 +2,45 @@ import logging
 import pulp
 from .constraints import addConstraints
 
-from .objective import setObjectiveFunction
+from .objective import buildObjectiveFunction
 from .parameters import (
     ModelParameters,
-    getDecisionVariables,
-    getModelParameters,
-    timeNormalizationValue,
+    buildDecisionVariables,
+    buildModelParameters,
+    TIME_NORMALIZATION_VALUE,
 )
 from .type import BannedRange, Project, ScheduledTask, Task
 from typing import List
 
 timeGranularity = 0.25  # 0.25 = 15 minutes
+SOLVER="GLPK_CMD"
+TIME_LIMIT=5
 
 # logging.basicConfig(level=logging.DEBUG)
-
+# print(pulp.listSolvers(onlyAvailable=True))
 
 def scheduleTasks(
     tasks: List[Task],
     projects: List[Project],
     bannedRanges: List[BannedRange] = [],
     debug=False,
-) -> List[Task]:
-    # print(pulp.listSolvers(onlyAvailable=True))
-    modelPrameters = getModelParameters(tasks, projects, bannedRanges)
-    decisionVariables = getDecisionVariables(
+) -> List[ScheduledTask]:
+    modelPrameters = buildModelParameters(tasks, projects, bannedRanges)
+    decisionVariables = buildDecisionVariables(
         modelPrameters.tasksIndicies, modelPrameters.bannedRangesIndicies
     )
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
-    setObjectiveFunction(lp, decisionVariables, modelPrameters)
+    lp += buildObjectiveFunction(decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)
-    solver = pulp.getSolver("GLPK_CMD", msg=0, timeLimit=5)  # 5
+    solver = pulp.getSolver(SOLVER, msg=0, timeLimit=TIME_LIMIT)
     lp.solve(solver)
     logSolution(lp)
-    return buildTasksListFromSolvedModel(lp, modelPrameters, tasks, debug)
+    return buildResponseFromSolvedModel(lp, modelPrameters, tasks, debug)
 
 
-def buildTasksListFromSolvedModel(
+def buildResponseFromSolvedModel(
     lp: pulp.LpProblem, modelPrameters: ModelParameters, tasks: List[Task], debug=False
-) -> List[Task]:
+) -> List[ScheduledTask]:
     solvedVariables = lp.variablesDict()
     allTasks = []
     scheduledTasks = []
@@ -53,7 +54,7 @@ def buildTasksListFromSolvedModel(
             raise Exception(f"Task {taskId} is scheduled, but doesn't have startTime!")
         resultTask = ScheduledTask(
             taskId,
-            round(startTime * timeNormalizationValue / timeGranularity)
+            round(startTime * TIME_NORMALIZATION_VALUE / timeGranularity)
             * timeGranularity,
         )
         scheduledTasks.append(resultTask)
@@ -64,7 +65,7 @@ def buildTasksListFromSolvedModel(
                 task.name,
                 task.projectId,
                 task.priority,
-                round(startTime * timeNormalizationValue / 0.25) * 0.25
+                round(startTime * TIME_NORMALIZATION_VALUE / 0.25) * 0.25
                 if isScheduled
                 else None,
                 task.duration,

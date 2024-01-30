@@ -6,7 +6,7 @@ import math
 from typing import Literal, List, TypedDict
 
 # if timeNormalizationValue=24, all time values are normalized to range 0-1 from 0-24 (when timeNormalizationValue=1)
-timeNormalizationValue = 1
+TIME_NORMALIZATION_VALUE = 1
 maxPriority = 4
 
 
@@ -46,7 +46,7 @@ def calculatePriorityWeight(priority):
     return math.pow(2, priority) - 1
 
 
-def getModelParameters(
+def buildModelParameters(
     tasks: List[Task], projects: List[Project], bannedRanges: List[BannedRange]
 ) -> ModelParameters:
     tasksIds = [task.id for task in tasks]
@@ -54,7 +54,7 @@ def getModelParameters(
     initialStartTime = buildInitialStartTimeParameter(tasks)
     priority = [task.priority for task in tasks]
     priorityWeight = buildPriorityWeights(maxPriority)
-    duration = [task.duration / timeNormalizationValue for task in tasks]
+    duration = [task.duration / TIME_NORMALIZATION_VALUE for task in tasks]
     projectTimeMin = buildProjectTimeMinList(tasks, projects)
     projectTimeMax = buildProjectTimeMaxList(tasks, projects)
     tasksPairs = generatePairs(tasksIndicies)
@@ -85,7 +85,7 @@ def getModelParameters(
 def buildInitialStartTimeParameter(tasks):
     return [
         (
-            task.startTime / timeNormalizationValue
+            task.startTime / TIME_NORMALIZATION_VALUE
             if task.startTime != None
             else task.startTime
         )
@@ -104,7 +104,7 @@ def buildPriorityRelationshipMatrix(tasksIndicies, priority, tasksPairs):
 def buildProjectTimeMaxList(tasks, projects):
     return [
         next(
-            project.timeRangeEnd / timeNormalizationValue
+            project.timeRangeEnd / TIME_NORMALIZATION_VALUE
             for project in projects
             if project.id == task.projectId
         )
@@ -115,7 +115,7 @@ def buildProjectTimeMaxList(tasks, projects):
 def buildProjectTimeMinList(tasks, projects):
     return [
         next(
-            project.timeRangeStart / timeNormalizationValue
+            project.timeRangeStart / TIME_NORMALIZATION_VALUE
             for project in projects
             if project.id == task.projectId
         )
@@ -137,12 +137,12 @@ class DecisionVariables:
         self.isTaskIafterRangeA = isTaskIafterRangeA
 
 
-def getDecisionVariables(tasksIndicies: List[int], bannedRangesIndicies: List[int]) -> DecisionVariables:
+def buildDecisionVariables(tasksIndicies: List[int], bannedRangesIndicies: List[int]) -> DecisionVariables:
     startTime = pulp.LpVariable.dicts(
         "startTime",
         tasksIndicies,
         lowBound=0,
-        upBound=24 / timeNormalizationValue,
+        upBound=24 / TIME_NORMALIZATION_VALUE,
         cat="Continuous",
     )
     isSheduled = pulp.LpVariable.dicts(

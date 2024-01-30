@@ -21,8 +21,8 @@ class TestCalculations(unittest.TestCase):
 
     def test_should_skip_task_with_lowest_priority(self):
         #given
-        task1 = Task("A1", "", "A", 4, None, 8.5)
-        task2 = Task("B1", "", "B", 3, None, 7.5)
+        task1 = Task("A1", "", "A", 4, None, 8)
+        task2 = Task("B1", "", "B", 3, None, 8)
         task3 = Task("B2", "", "B", 2, None, 8)
         task4 = Task("C1", "", "C", 1, None, 8)
         tasks = [task1, task2, task3, task4]
@@ -36,8 +36,8 @@ class TestCalculations(unittest.TestCase):
         #then
         self.assertAllTasksAreScheduled(3, resultTasks)
         assertTaskStartTime(self, ("A1", 0), resultTasks)
-        assertTaskStartTime(self, ("B1", 8.5), resultTasks)
-        assertTaskStartTime(self, ("B2", 16.0), resultTasks)
+        assertTaskStartTime(self, ("B1", 8), resultTasks)
+        assertTaskStartTime(self, ("B2", 16), resultTasks)
 
     def test_should_schedule_all_tasks_even_when_priorities_are_opposite1(self):
         #given
