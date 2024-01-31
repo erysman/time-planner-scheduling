@@ -52,7 +52,7 @@ def buildModelParameters(
     tasksIds = [task.id for task in tasks]
     tasksIndicies: List[int] = range(0, len(tasksIds))
     initialStartTime = buildInitialStartTimeParameter(tasks)
-    priority = [task.priority for task in tasks]
+    priority = buildPriorityList(tasks)
     priorityWeight = buildPriorityWeights(maxPriority)
     duration = [task.duration / TIME_NORMALIZATION_VALUE for task in tasks]
     projectTimeMin = buildProjectTimeMinList(tasks, projects)
@@ -81,6 +81,9 @@ def buildModelParameters(
         bannedRangeStartTime,
         bannedRangeEndTime,
     )
+
+def buildPriorityList(tasks):
+    return [task.priority if task.startTime == None else 1 for task in tasks]
 
 def buildInitialStartTimeParameter(tasks):
     return [
