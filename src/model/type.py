@@ -13,6 +13,19 @@ class ScheduledTask:
             return False
         return self.id == other.id and self.startTime == other.startTime
 
+class ScheduleResult:
+    def __init__(self, scheduledTasks: list[ScheduledTask], score: float):
+        self.scheduledTasks = scheduledTasks
+        self.score = score
+    
+    def __str__(self):
+        return f"ScheduleResult(scheduledTasks={self.scheduledTasks}, score={self.score})"
+    
+    def __eq__(self, other):
+        if not isinstance(other, ScheduleResult):
+            return False
+        return self.scheduledTasks.sort() == other.scheduledTasks.sort() and self.score == other.score
+
 class Task:
     def __init__(
         self,

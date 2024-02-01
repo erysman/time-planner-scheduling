@@ -9,22 +9,26 @@ from .parameters import (
     buildModelParameters,
     TIME_NORMALIZATION_VALUE,
 )
-from .type import BannedRange, Project, ScheduledTask, Task
+from .type import BannedRange, Project, ScheduledTask, Task, ScheduleResult
 from typing import List
 
 timeGranularity = 0.25  # 0.25 = 15 minutes
-SOLVER="GLPK_CMD"
-TIME_LIMIT=5
+# SOLVER="GLPK_CMD"
+# SOLVER = "PULP_CBC_CMD"
+SOLVER = "CPLEX_CMD"
+TIME_LIMIT_S = 10
 
 # logging.basicConfig(level=logging.DEBUG)
-# print(pulp.listSolvers(onlyAvailable=True))
+print(pulp.listSolvers(onlyAvailable=True))
+
 
 def scheduleTasks(
     tasks: List[Task],
     projects: List[Project],
     bannedRanges: List[BannedRange] = [],
     debug=False,
-) -> List[ScheduledTask]:
+    timeLimit=TIME_LIMIT_S,
+) -> ScheduleResult:
     modelPrameters = buildModelParameters(tasks, projects, bannedRanges)
     decisionVariables = buildDecisionVariables(
         modelPrameters.tasksIndicies, modelPrameters.bannedRangesIndicies
@@ -32,13 +36,16 @@ def scheduleTasks(
     lp = pulp.LpProblem("tasksScheduleProblem", pulp.LpMaximize)
     lp += buildObjectiveFunction(decisionVariables, modelPrameters)
     addConstraints(lp, decisionVariables, modelPrameters)
-    solver = pulp.getSolver(SOLVER, msg=0, timeLimit=TIME_LIMIT)
-    lp.solve(solver)
-    logSolution(lp)
-    return buildResponseFromSolvedModel(lp, modelPrameters, tasks, debug)
+    solver = pulp.getSolver(SOLVER, msg=0, timeLimit=timeLimit)
+    status = lp.solve(solver)
+    # if debug:
+    logSolution(lp, status)
+    score = pulp.value(lp.objective)
+    scheduleTasks = buildSheduleTasksListFromSolvedModel(lp, modelPrameters, tasks, debug)
+    return ScheduleResult(scheduleTasks, score)
 
 
-def buildResponseFromSolvedModel(
+def buildSheduleTasksListFromSolvedModel(
     lp: pulp.LpProblem, modelPrameters: ModelParameters, tasks: List[Task], debug=False
 ) -> List[ScheduledTask]:
     solvedVariables = lp.variablesDict()
@@ -81,8 +88,12 @@ def buildResponseFromSolvedModel(
     return sortedScheduledTasks
 
 
-def logSolution(lp: pulp.LpProblem):
+def logSolution(lp: pulp.LpProblem, status):
     for var in lp.variables():
-        logging.debug(f"{var} = {pulp.value(var)}")
+        var_name = str(var)
+        if "startTime" not in var_name and "isScheduled" not in var_name:
+            continue
+        logging.debug(f"{var_name} = {pulp.value(var)}")
 
     logging.debug(f"OPT = {pulp.value(lp.objective)}")
+    logging.debug(f"status = {pulp.LpStatus[status]}")

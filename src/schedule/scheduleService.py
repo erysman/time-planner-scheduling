@@ -13,11 +13,11 @@ class ScheduleService:
         return cls._instance
 
     def schedule(self, dto: ScheduleTasksRequestDTO) -> ScheduleTasksResponseDTO:
-        logging.debug(dto)
+        # logging.debug(dto)
         runId = uuid.uuid4()
         self.validateDTO(dto)
-        scheduledTasks = scheduleTasks(dto.tasks, dto.projects, dto.bannedRanges)
-        return ScheduleTasksResponseDTO(scheduledTasks, runId)
+        result = scheduleTasks(dto.tasks, dto.projects, dto.bannedRanges)
+        return ScheduleTasksResponseDTO(result.scheduledTasks, runId, result.score)
     
     def validateDTO(self, dto: ScheduleTasksRequestDTO):
         isValid = True

@@ -75,17 +75,20 @@ class ScheduleTasksResponseDTO:
     def __init__(
         self,
         scheduledTasks: List[ScheduledTask], 
-        runId: str
+        runId: str,
+        score: float
     ):
         self.scheduledTasks=scheduledTasks
         self.runId = runId
+        self.score = score
         
     def __str__(self):
-        return f"ScheduleTasksDTO(scheduledTasks={self.scheduledTasks}, runId={self.runId})"
+        return f"ScheduleTasksDTO(scheduledTasks={self.scheduledTasks}, runId={self.runId}, score={self.score})"
     
 class ScheduleTasksResponseDTOSchema(Schema):
     scheduledTasks = fields.List(fields.Nested(ScheduledTaskSchema), required=True)
     runId = fields.Str(required=True)
+    score = fields.Float(required=False)
 
     @post_load
     def make_schedule_tasks_response_dto(self, data, **kwargs):
