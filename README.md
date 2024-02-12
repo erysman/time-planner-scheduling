@@ -2,8 +2,11 @@
 Run tests:
 `python3 -m unittest tests.test_model.TestCalculations`
 
-Start server:
+Start dev server:
 `python3 main.py`
+
+start prod server:
+`gunicorn -w 2 main:app -b 0.0.0.0:8082`
 
 API url:
 `http://localhost:8082/v1/scheduleTasks`

@@ -5,42 +5,42 @@ import math
 
 
 def buildObjectiveFunction(
-    decisionVariables: DecisionVariables,
-    modelPrameters: ModelParameters,
+    dv: DecisionVariables,
+    mp: ModelParameters,
 ):
-    tasksCount = len(modelPrameters.tasksIds)
-    numberOfTasksWeight = max((3 * tasksCount - 6, 2))
-    priorityOrderWeight = 1
-    earlierStartsWeight = 0.25
+    tasksCount = len(mp.tasksIds)
+    w1 = max((3 * tasksCount - 6), 2)
+    w2 = 1
+    w3 = 0.25
     return (
-        numberOfTasksWeight * maximizeNumberOfTasksWithHighPriority(decisionVariables, modelPrameters)
-        - priorityOrderWeight * penalizeTasksNotOrderedByPriority(decisionVariables, modelPrameters)
-        - earlierStartsWeight * penalizeLateStartTimes(decisionVariables, modelPrameters),
+        w1 * maximizeNumberOfTasks(dv, mp)
+        - w2 * penalizeWrongOrder(dv, mp)
+        - w3 * penalizeLateStartTimes(dv, mp),
         "objective",
     )
 
-
-def maximizeNumberOfTasksWithHighPriority(
-    decisionVariables: DecisionVariables, modelPrameters: ModelParameters
+def maximizeNumberOfTasks(
+    dv: DecisionVariables,
+    mp: ModelParameters
 ):
-    tasksIndicies = modelPrameters.tasksIndicies
-    priority = modelPrameters.priority
-    priorityWeight = modelPrameters.priorityWeight
-    isSheduled = decisionVariables.isSheduled
+    tasksIndicies = mp.tasksIndicies
+    priority = mp.priority
+    priorityWeight = mp.priorityWeight
+    isSheduled = dv.isSheduled
+    sum = []
+    for i in tasksIndicies:
+        sum.append(priorityWeight[priority[i]] * isSheduled[i])
+    return pulp.lpSum(sum)
 
-    return pulp.lpSum(
-        [priorityWeight[priority[i]] * isSheduled[i] for i in tasksIndicies]
-    )
 
-def penalizeTasksNotOrderedByPriority(
-    decisionVariables: DecisionVariables, modelPrameters: ModelParameters
-):
-    tasksPairs = modelPrameters.tasksPairs
-    isIPriorityGreaterThanJ = modelPrameters.isIPriorityGreaterThanJ
-    isIafterJ = decisionVariables.isIafterJ
+def penalizeWrongOrder(dv: DecisionVariables, mp: ModelParameters):
+    tasksPairs = mp.tasksPairs
+    isIPriorityGreaterThanJ = mp.isIPriorityGreaterThanJ
+    isIafterJ = dv.isIafterJ
     return pulp.lpSum(
         [isIafterJ[i][j] * isIPriorityGreaterThanJ[i][j] for i, j in tasksPairs]
     )
+
 
 def penalizeLateStartTimes(
     decisionVariables: DecisionVariables, modelPrameters: ModelParameters
@@ -50,5 +50,6 @@ def penalizeLateStartTimes(
 
     return (
         pulp.lpSum([(startTime[i]) for i in tasksIndicies])
-        * TIME_NORMALIZATION_VALUE / 24
+        * TIME_NORMALIZATION_VALUE
+        / 24
     )

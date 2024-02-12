@@ -15,7 +15,8 @@ from typing import List
 timeGranularity = 0.25  # 0.25 = 15 minutes
 # SOLVER="GLPK_CMD"
 # SOLVER = "PULP_CBC_CMD"
-SOLVER = "CPLEX_CMD"
+# SOLVER = "CPLEX_CMD"
+SOLVER = "CPLEX_PY"
 TIME_LIMIT_S = 10
 
 # logging.basicConfig(level=logging.DEBUG)

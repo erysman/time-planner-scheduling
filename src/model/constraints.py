@@ -6,14 +6,15 @@ BIG_M = 1000
 
 def addConstraints(
     lp: pulp.LpProblem,
-    decisionVariables: DecisionVariables,
-    modelPrameters: ModelParameters,
+    dv: DecisionVariables,
+    mp: ModelParameters,
 ):
-    someStartTimesAreAlreadySet(lp, decisionVariables, modelPrameters)
-    startTimesShouldNotExceedOneDay(lp, decisionVariables, modelPrameters)
-    tasksShouldNotOverlapInTime(lp, decisionVariables, modelPrameters)
-    tasksShouldNotExceedProjectTimeRange(lp, decisionVariables, modelPrameters)
-    tasksShouldNotOverlapWithBannedRanges(lp, decisionVariables, modelPrameters)
+    someStartTimesAreAlreadySet(lp, dv, mp)
+    startTimesShouldNotExceedOneDay(lp, dv, mp)
+    tasksShouldNotOverlapInTime(lp, dv, mp)
+    tasksShouldNotExceedProjectTimeRange(lp, dv, mp)
+    tasksShouldNotOverlapWithBannedRanges(lp, dv, mp)
+
 
 def someStartTimesAreAlreadySet(
     lp: pulp.LpProblem,
@@ -52,19 +53,19 @@ def startTimesShouldNotExceedOneDay(
 
 def tasksShouldNotOverlapInTime(
     lp: pulp.LpProblem,
-    decisionVariables: DecisionVariables,
-    modelPrameters: ModelParameters,
+    dv: DecisionVariables,
+    mp: ModelParameters,
 ):
-    startTime = decisionVariables.startTime
-    isSheduled = decisionVariables.isSheduled
-    isIafterJ = decisionVariables.isIafterJ
-    initialStartTime = modelPrameters.initialStartTime
+    startTime = dv.startTime
+    isSheduled = dv.isSheduled
+    isIafterJ = dv.isIafterJ
+    initialStartTime = mp.initialStartTime
 
-    for i, j in modelPrameters.tasksPairs:
+    for i, j in mp.tasksPairs:
         if initialStartTime[i] != None and initialStartTime[j] != None:
             continue
         lp += (
-            startTime[i] + modelPrameters.duration[i] * isSheduled[i]
+            startTime[i] + mp.duration[i] * isSheduled[i]
             <= startTime[j] + BIG_M * isIafterJ[i][j] + BIG_M * (1 - isSheduled[j]),
             f"tasks_{i}_{j}_cant_overlap",
         )
@@ -97,9 +98,10 @@ def tasksShouldNotExceedProjectTimeRange(
         if initialStartTime[i] != None:
             continue
         lp += (
-            startTime[i] + duration[i] <= projectTimeMax[i],
+            startTime[i] + duration[i] * isSheduled[i] <= projectTimeMax[i],
             f"endTime_less_than_projectTimeMax_{i}",
         )
+
 
 def tasksShouldNotOverlapWithBannedRanges(
     lp: pulp.LpProblem,
@@ -115,7 +117,7 @@ def tasksShouldNotOverlapWithBannedRanges(
     bannedRangeEndTime = modelPrameters.bannedRangeEndTime
     for i in modelPrameters.tasksIndicies:
         if initialStartTime[i] != None:
-            continue;
+            continue
         for k in modelPrameters.bannedRangesIndicies:
             lp += (
                 startTime[i] + duration[i] * isSheduled[i]
