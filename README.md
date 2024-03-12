@@ -1,15 +1,37 @@
 
-Run tests:
+# Time-planner-scheduling server
+
+## Deploy
+
+```bash
+
+docker build -t time-planner-scheduling .
+docker image tag time-planner-scheduling europe-central2-docker.pkg.dev/time-planner-dc611/time-planner-server/scheduling
+docker image push europe-central2-docker.pkg.dev/time-planner-dc611/time-planner-server/scheduling
+```
+
+## Run
+
+### Run container
+
+`docker run --rm -it -p 8082:8082 time-planner-scheduling`
+
+### Run tests
+
 `python3 -m unittest tests.test_model.TestCalculations`
 
-Start dev server:
-`python3 main.py`
+### Start dev server
 
-start prod server:
-`gunicorn -w 2 main:app -b 0.0.0.0:8082`
+`python3 src.main.py`
 
-API url:
+### Start prod server
+
+`gunicorn -w 2 src.main:app -b 0.0.0.0:8082`
+
+### API
+
 `http://localhost:8082/v1/scheduleTasks`
+
 
 Example request body:
 

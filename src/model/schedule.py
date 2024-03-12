@@ -1,6 +1,7 @@
 import logging
 import pulp
 from .constraints import addConstraints
+import os
 
 from .objective import buildObjectiveFunction
 from .parameters import (
@@ -16,11 +17,12 @@ timeGranularity = 0.25  # 0.25 = 15 minutes
 # SOLVER="GLPK_CMD"
 # SOLVER = "PULP_CBC_CMD"
 # SOLVER = "CPLEX_CMD"
-SOLVER = "CPLEX_PY"
+SOLVER = os.getenv('SOLVER_TYPE') or "PULP_CBC_CMD"
+print(f"Using solver: {SOLVER}")
 TIME_LIMIT_S = 10
 
 # logging.basicConfig(level=logging.DEBUG)
-print(pulp.listSolvers(onlyAvailable=True))
+print(f"Available solvers: {pulp.listSolvers(onlyAvailable=True)}")
 
 
 def scheduleTasks(

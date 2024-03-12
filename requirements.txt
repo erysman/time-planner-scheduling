@@ -1,3 +1,4 @@
 marshmallow==3.20.1
 Flask==3.0.0
 PuLP==2.7.0
+gunicorn==21.2.0
